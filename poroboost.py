@@ -8,6 +8,10 @@
 # y_train: (2445, 5)
 # y_test:  (815, 5)
 #
+#  1.0 Ca++ - 2.0 H+ + 1.0 CO2(aq) + 1.0 H2O <-> 1.0 CaCO3
+# Average reaction rate mineral 0 component 0: Calcite CaCO3 
+#
+#
 import sys
 import os
 import math
@@ -46,8 +50,12 @@ class IterLoadForDMatrix(xgb.core.DataIter):
         b = min( (self.it + 1) * self.batch_size, self.rows )
         # Contain the data that will be passed by batch to input.
         input_data(data=self.df[a:b], label=self.target[a:b,2]) # component 0 
+        data=self.df[a:b]
+        print(f"next batch rows [{a},{b}), dimension {data.shape}, iteration {self.it}")
         self.it += 1
         return 1
+
+component = int(sys.argv[1])
 dir='/global/cfs/projectdirs/m1516/summer2023'        
 pklfile='/global/cfs/projectdirs/m1516/summer2023/porosity.pkl'
 print(f"Opening and reading {pklfile}")
@@ -66,7 +74,7 @@ dtrain = xgb.QuantileDMatrix(Xy_train, max_bin=256)
 #                                 component 1 is y_train[2]
 #dtrain_reg = xgb.DMatrix(X_train, y_train, enable_categorical=False)
 print(f"Instantiating xgb.DMatrix")
-dtest_reg = xgb.DMatrix(X_test, y_test[:,2], enable_categorical=False)    
+dtest_reg = xgb.DMatrix(X_test, y_test[:,2+component], enable_categorical=False)    
 #dtrain_reg = xgb.QuantileDMatrix(X_train, y_train, enable_categorical=False)
 #dtest_reg = xgb.QuantileDMatrix(X_test, y_test, enable_categorical=False)    
 
@@ -96,25 +104,26 @@ print(f"End xgb.train")
 # TODO: dtest_reg should only use y[2]
 
 preds = model.predict(dtest_reg)
-rmse = mean_squared_error(y_test[:,2], preds, squared=False)
+rmse = mean_squared_error(y_test[:,2+component], preds, squared=False)
 
 print(f"RMSE of the base model: {rmse:.3f}")
 
 epochs = len(evals_result['validation']['rmse'])
 x_axis = range(0, epochs)
 
-fig = plt.figure(figsize=(6,3))
-fig.suptitle(f"XGBoost RMSE", fontsize=16)
+fig = plt.figure(figsize=(7.00, 3.50))
+
+fig.suptitle(f"XGBoost: Average reaction rate for Calcite $(CaCO_{3})$ Component {component}", fontsize=12)
 ax = fig.add_subplot(111)
 ax.set_title(f"RMSE vs Epoch")
 ax.set_xlabel("Epoch",labelpad=10) 
 ax.set_ylabel("RMSE",labelpad=10)
 
-ax.plot(x_axis, evals_result['validation']['rmse'], label='Train')
+ax.plot(x_axis, evals_result['train']['rmse'], label='Train', linestyle='dashed')
 ax.plot(x_axis, evals_result['validation']['rmse'], label='Test')
 
 ax.legend()
 print(f"Saving plot")
-plt.savefig(dir + '/' + "poroboost" + '.png', bbox_inches='tight')
+plt.savefig(dir + '/' + "poroboost_" + str(component) + '.png', bbox_inches='tight')
 plt.close(fig)
 print(f"Done")
