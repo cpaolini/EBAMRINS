@@ -1,0 +1,21 @@
+#!/bin/bash
+#SBATCH -A m1516
+#SBATCH -C gpu
+#SBATCH -q regular
+#SBATCH -t 01:00:00
+#SBATCH -n 1
+#SBATCH --ntasks-per-node=1
+#SBATCH -c 16
+#SBATCH --gpus-per-task=1
+#SBATCH --gpu-bind=map_gpu:0,1,2,3,0,1,2,3
+#SBATCH -J porboost
+#SBATCH -e %j.err
+#SBATCH -o %j.out
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=paolini@engineering.sdsu.edu
+
+module load PrgEnv-gnu cpe-cuda python
+conda activate conda_plot2d
+cd /global/cfs/projectdirs/m1516/summer2023/images
+srun -C gpu --exclusive python3.9 $HOME/EBAMRINS/poroboost.py >& $HOME/EBAMRINS/poroboost.log
+conda deactivate
