@@ -48,7 +48,7 @@ if os.path.isfile(filename):
 	print(f'patch columns: {patchCols}')
 	print(f'patch rows: {patchRows}')
 
-	fig = plt.figure(figsize=(6,9))
+	fig = plt.figure(figsize=(6,12))
 	fig.suptitle(f"{filename}, time = {time:.4f}s", fontsize=16)
 
 	velocity0_i = components.index("velocity0")
@@ -95,7 +95,7 @@ if os.path.isfile(filename):
 	ax3.set_ylabel("y",labelpad=10)
 
 	#plt.show()
-	plt.savefig(filename + '.png', bbox_inches='tight')
+	plt.savefig(filename + '.png', bbox_inches='tight', dpi=2400)
 	plt.close(fig)
 
 else:
