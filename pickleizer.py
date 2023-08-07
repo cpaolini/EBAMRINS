@@ -24,7 +24,7 @@
 #conda list -n conda_plot2d
 #conda install -n conda_plot2d -c conda-forge py-xgboost-gpu
 #conda install -n conda_plot2d scikit-learn
-#
+# 
 import sys
 import os
 import h5py
@@ -61,7 +61,19 @@ def _parse_line(line):
     # if there are no matches
     return None, None
 
-rootdir = '/global/cfs/projectdirs/m1516/summer2023'
+#rootdir = '/global/cfs/projectdirs/m1516/summer2023'
+
+if len(sys.argv) != 4:
+    print(f'usage: pickleizer.py rootdir pklfile\n')
+    exit(0)
+else:
+    rootdir = sys.argv[1]
+    if os.path.exists(rootdir) == False:
+        print(f'error: rootdir does not exist\n')
+        exit(0)
+    pklfile = sys.argv[2] #'/global/cfs/projectdirs/m1516/summer2023/porosity.pkl'
+    inputs = sys.argv[3]
+    
 A = []
 y = []
 for subdir, dirs, files in os.walk(rootdir):
@@ -73,7 +85,7 @@ for subdir, dirs, files in os.walk(rootdir):
         file_name = split_tup[0]
         file_extension = split_tup[1]
   
-        if file_extension == '.hdf5' and 'plot.nx2048.step0004000.2d' in file_name:
+        if file_extension == '.hdf5' and '.step0004000.2d' in file_name:
             print("File Name: ", file_name)
             #print("File Extension: ", file_extension)
             #print(file_name[:-2])
@@ -165,58 +177,55 @@ for subdir, dirs, files in os.walk(rootdir):
                 ###B = np.dstack((B,porosity0))
 
                 B = np.copy(porosity0)
-
                 print(f'B.shape: {B.shape}')
-                if B.shape == (1024, 2048): ### if B.shape == (1024, 2048, 3):
-                    A.append(B.reshape(-1))
-                    print(f'len(A): {len(A)}')
-                    # packedChannel001.inputs_01
-                    b = np.zeros((5,))
-                    with open(os.path.join(subdir, 'packedChannel.inputs'), 'r') as file_object:
+                A.append(B.reshape(-1))
+                print(f'len(A): {len(A)}')
+                # packedChannel001.inputs_01
+                b = np.zeros((5,))
+                with open(os.path.join(subdir, inputs), 'r') as file_object:
+                    line = file_object.readline()
+                    while line:
+                        key, match = _parse_line(line)
+                        #print(f'key={key}')
+
+                        if key == 'minDistSph':
+                            minDistSph = match.group('minDistSph')
+                            print(f'minDistSph: {minDistSph}')
+                            b[0] = float(minDistSph)
+
+                        if key == 'minDistCyl':
+                            minDistCyl = match.group('minDistCyl')
+                            print(f'minDistCyl: {minDistCyl}')
+                            b[1] = float(minDistCyl)
+
+                        #print(line)
                         line = file_object.readline()
-                        while line:
-                            key, match = _parse_line(line)
-                            #print(f'key={key}')
+                        lastStep = False
+                with open(os.path.join(subdir, 'pout.0'), 'r') as file_object:
+                    line = file_object.readline()
+                    while line:
+                        key, match = _parse_line(line)
+                        #print(f'key={key}')
 
-                            if key == 'minDistSph':
-                                minDistSph = match.group('minDistSph')
-                                print(f'minDistSph: {minDistSph}')
-                                b[0] = float(minDistSph)
+                        if key == 'step':
+                            step = match.group('step')
+                            if step == '4000':
+                                print(f'step: {step}')
+                                lastStep = True
+                            else:
+                                lastStep = False
 
-                            if key == 'minDistCyl':
-                                minDistCyl = match.group('minDistCyl')
-                                print(f'minDistCyl: {minDistCyl}')
-                                b[1] = float(minDistCyl)
+                        if key == 'rate' and lastStep:
+                            mineral = match.group('mineral')
+                            component = match.group('component')
+                            rate = match.group('rate')
+                            b[int(component)+2] = float(rate)
 
-                            #print(line)
-                            line = file_object.readline()
-                    lastStep = False
-                    with open(os.path.join(subdir, 'pout.0'), 'r') as file_object:
+                            print(f'rate: {rate} {component} {mineral}')
+
+                        #print(line)
                         line = file_object.readline()
-                        while line:
-                            key, match = _parse_line(line)
-                            #print(f'key={key}')
-
-                            if key == 'step':
-                                step = match.group('step')
-                                if step == '4000':
-                                    print(f'step: {step}')
-                                    lastStep = True
-                                else:
-                                    lastStep = False
-                                    
-                            if key == 'rate' and lastStep:
-                                mineral = match.group('mineral')
-                                component = match.group('component')
-                                rate = match.group('rate')
-                                b[int(component)+2] = float(rate)
-
-                                print(f'rate: {rate} {component} {mineral}')
-
-                            #print(line)
-                            line = file_object.readline()
                     y.append(b)
-
             else:
                 raise Exception(f"file {os.path.join(subdir, file)} not found")
             
@@ -231,8 +240,6 @@ print(f'X_train.shape: {X_train.shape}')
 print(f'X_test.shape: {X_test.shape}')
 print(f'y_train.shape: {y_train.shape}')
 print(f'y_test.shape: {y_test.shape}')
-
-pklfile='/global/cfs/projectdirs/m1516/summer2023/porosity.pkl'
 
 with open(pklfile, 'wb') as f:
     pickle.dump(X_train, f)
