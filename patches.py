@@ -22,7 +22,6 @@ if __name__ == '__main__':
         else:
             os.chdir(path)
             
-path = '/Users/janagonzalez/chombocrunch/EBAMR/EBAMRINS/execPAMR/'
 pFile = re.compile('plot.nx128.step(\d+).2d.hdf5')
 pLevel = re.compile('level_(\d+)')
 a = np.empty([0,7])
@@ -45,7 +44,36 @@ for file in listdir(path):
         dataNumPy = np.array(data, np.float64)
         
         dxArray = np.empty((2,))
-     
+        level_0 = hf_in["level_0/"]
+        prob_domain = level_0.attrs["prob_domain"]
+        X, Y = np.mgrid[prob_domain[1]:prob_domain[3]+1, prob_domain[0]:prob_domain[2]+1]
+                
+        # Box dimensions------------------------------------
+        boxes = hf_in["level_0/boxes"]
+        boxDim = (boxes[0][2] - boxes[0][0] + 1, boxes[0][3] - boxes[0][1] + 1) # assume level 0 boxes are all of equivalent dimension
+        nBoxes = boxes.shape[0]
+        nRows = X.shape[0]
+        nCols = X.shape[1]
+        patchRows = int(nRows/boxDim[1])
+        patchCols = int(nCols/boxDim[0])
+        boxData = dataNumPy.reshape((nBoxes,int(dataNumPy.shape[0]/nBoxes)))
+                
+        # Velocity extraction------------------------------------
+        velocity0_i = int(re.findall(r'\d+', componentKeys[components.index("velocity0")])[0]) 
+
+        velocity0 = np.zeros(X.shape)
+        #print(f"velocity0.shape {velocity0.shape}")
+                
+        #print(f"patchCols {patchCols}")
+        for col in range(patchCols):
+            #print(f"patchRows {patchRows}")
+            for row in range(patchRows):
+                #   print(f"[{row * boxDim[0]} : {(row + 1) * boxDim[0]}, {col * boxDim[1]} : {(col + 1) * boxDim[1]}]")
+                velocity0[row * boxDim[0] : (row + 1) * boxDim[0], col * boxDim[1] : (col + 1) * boxDim[1]] = \
+                    np.lib.stride_tricks.as_strided(boxData[col * patchRows + row, velocity0_i*(boxDim[0] * boxDim[1]):(velocity0_i+1)*(boxDim[0] * boxDim[1])], \
+                    shape=(boxDim[0],boxDim[1]),\
+                    strides=(8 * boxDim[1], 8 * 1))   
+
         isPrinted = False
         for key in root.keys():
             #print(f'\nkey: {key}', end=' ')
@@ -66,47 +94,13 @@ for file in listdir(path):
                 boxes = hf_in[mLevel.group(0) + "/boxes"]
                 data_attributes = hf_in[mLevel.group(0) + "/data_attributes"]
                 numBoxes = boxes.shape[0]
-                #print(f'number of boxes: {numBoxes}', end=' ')
-
-                if levelNum == 0:
-                    prob_domain = level.attrs["prob_domain"]
-                    X, Y= np.mgrid[prob_domain[1]:prob_domain[3]+1, prob_domain[0]:prob_domain[2]+1]
-                
-                    # Box dimensions------------------------------------
-                    boxDim = (boxes[0][2] - boxes[0][0] + 1, boxes[0][3] - boxes[0][1] + 1) # assume level 0 boxes are all of equivalent dimension
-                    nBoxes = boxes.shape[0]
-                    nRows = X.shape[0]
-                    nCols = X.shape[1]
-                    patchRows = int(nRows/boxDim[1])
-                    patchCols = int(nCols/boxDim[0])
-
-                    boxData = dataNumPy.reshape((nBoxes,int(dataNumPy.shape[0]/nBoxes)))
-                
-                    # Velocity extraction------------------------------------
-                    velocity0_i = int(re.findall(r'\d+', componentKeys[components.index("velocity0")])[0]) 
-
-                    velocity0 = np.zeros(X.shape)
-                    #print(f"velocity0.shape {velocity0.shape}")
-                
-                    #print(f"patchCols {patchCols}")
-                    for col in range(patchCols):
-                        #print(f"patchRows {patchRows}")
-                        for row in range(patchRows):
-                         #   print(f"[{row * boxDim[0]} : {(row + 1) * boxDim[0]}, {col * boxDim[1]} : {(col + 1) * boxDim[1]}]")
-                            velocity0[row * boxDim[0] : (row + 1) * boxDim[0], col * boxDim[1] : (col + 1) * boxDim[1]] = \
-                                np.lib.stride_tricks.as_strided(boxData[col * patchRows + row, velocity0_i*(boxDim[0] * boxDim[1]):(velocity0_i+1)*(boxDim[0] * boxDim[1])], \
-                                shape=(boxDim[0],boxDim[1]),\
-                                strides=(8 * boxDim[1], 8 * 1))               
+                #print(f'number of boxes: {numBoxes}', end=' ')                              
 
                 i = 0
                 for box in boxes:
     
                     boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
                     
-                    # each box is a 4-tuple
-                    X = (box[0] * dx, box[1] * dx), (box[2] - box[0] + 1) * dx
-                    Y = (box[3] - box[1] + 1) * dx
-
                     # print(f'box {i}: {boxDim}, box : {box}', end=' ')
 
                     width = box[0] * dx, box[1] * dx, (box[2] - box[0] + 1) * dx
@@ -118,16 +112,16 @@ for file in listdir(path):
 
                     boxData = dataNumPy.reshape((nBoxes,int(dataNumPy.shape[0]/nBoxes)))
 
-                    v = velocity0[box[1]:box[3]+1,box[0]:box[2]+1]
+                    v = velocity0[box[1]//2:(box[3]//2)+1,box[0]//2:(box[2]//2)+1]
                     #print(f"v {v.shape}: {v}")
                     #print(np.max(v))
                     stdev = np.std(v)
 
                     if math.isnan(stdev):
-                        print(f'nan v : {v}, v dim: {v.shape}')  
+                        print(f'nan v : {v}, v dim: {v.shape}, {box[1]}:{box[3]+1},{box[0]}:{box[2]+1}')  
                         print(f"level: {levelNum}")
                         print(l)
-                        print(f"v {v.shape}: {v}\n\n\n")
+                        print(f"v {v.shape}: {v}, velocity0: {velocity0.shape}\n\n\n")
                         #sys.exit(1)
 
                     #print(f'box {boxDim}, origin box dim : {box}', end=' ')
