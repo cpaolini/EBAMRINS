@@ -9,7 +9,6 @@ import pickle
 from os import listdir
 from os.path import isfile, join
 
-
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print (f'usage: patches.py <path>')
@@ -48,7 +47,7 @@ for file in listdir(path):
         prob_domain = level_0.attrs["prob_domain"]
         X, Y = np.mgrid[prob_domain[1]:prob_domain[3]+1, prob_domain[0]:prob_domain[2]+1]
                 
-        # Box dimensions------------------------------------
+        # Box dimensions
         boxes = hf_in["level_0/boxes"]
         boxDim = (boxes[0][2] - boxes[0][0] + 1, boxes[0][3] - boxes[0][1] + 1) # assume level 0 boxes are all of equivalent dimension
         nBoxes = boxes.shape[0]
@@ -58,7 +57,7 @@ for file in listdir(path):
         patchCols = int(nCols/boxDim[0])
         boxData = dataNumPy.reshape((nBoxes,int(dataNumPy.shape[0]/nBoxes)))
                 
-        # Velocity extraction------------------------------------
+        # Velocity extraction
         velocity0_i = int(re.findall(r'\d+', componentKeys[components.index("velocity0")])[0]) 
 
         velocity0 = np.zeros(X.shape)
@@ -74,7 +73,6 @@ for file in listdir(path):
                     shape=(boxDim[0],boxDim[1]),\
                     strides=(8 * boxDim[1], 8 * 1))   
 
-        isPrinted = False
         for key in root.keys():
             #print(f'\nkey: {key}', end=' ')
             mLevel = pLevel.match(key)
@@ -96,7 +94,6 @@ for file in listdir(path):
                 numBoxes = boxes.shape[0]
                 #print(f'number of boxes: {numBoxes}', end=' ')                              
 
-                i = 0
                 for box in boxes:
     
                     boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
@@ -108,11 +105,9 @@ for file in listdir(path):
                     
                     comps == int(data.shape[0]/((boxDim[0] * boxDim[1]) * nBoxes ))
                     dataNumPy.shape[0]/nBoxes == boxDim[0] * boxDim[1] * comps
-
-
                     boxData = dataNumPy.reshape((nBoxes,int(dataNumPy.shape[0]/nBoxes)))
-
-                    v = velocity0[box[1]//2:(box[3]//2)+1,box[0]//2:(box[2]//2)+1]
+                    factor = 2**levelNum
+                    v = velocity0[box[1]//factor:(box[3]//factor)+1,box[0]//factor:(box[2]//factor)+1]
                     #print(f"v {v.shape}: {v}")
                     #print(np.max(v))
                     stdev = np.std(v)
@@ -122,19 +117,12 @@ for file in listdir(path):
                         print(f"level: {levelNum}")
                         print(l)
                         print(f"v {v.shape}: {v}, velocity0: {velocity0.shape}\n\n\n")
-                        #sys.exit(1)
+                        sys.exit(1)
 
                     #print(f'box {boxDim}, origin box dim : {box}', end=' ')
                     l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev]
-                    
                     #print(l)
-
-                    a = np.append(a, [l], axis=0)
-                    if isPrinted == False:
-                        isPrinted = True
-                        print(l)
-                    
-                    i +=1
+                    a = np.append(a, [l], axis=0)                   
 
 with open('patches.pkl', 'wb') as f:
     pickle.dump(a, f)
