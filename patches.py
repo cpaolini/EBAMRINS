@@ -42,7 +42,8 @@ for file in listdir(path):
         components = [i.decode('utf-8') if isinstance(i, np.bytes_) else '' for i in list(root.attrs.values())]
         dataNumPy = np.array(data, np.float64)
         
-        dxArray = np.empty((2,))
+        #dxArray = np.empty((levelNum,))
+        #dxArray = np.array((levelNum,))
         level_0 = hf_in["level_0/"]
         prob_domain = level_0.attrs["prob_domain"]
         X, Y = np.mgrid[prob_domain[1]:prob_domain[3]+1, prob_domain[0]:prob_domain[2]+1]
@@ -80,6 +81,9 @@ for file in listdir(path):
             
             if mLevel:
                 levelNum = int(mLevel.group(1))
+
+                dxArray = np.array((levelNum,))
+
                 #print(f'level number: {levelNum}', end=' ')         # printing out each level number 
                 levelHandle = hf_in[mLevel.group(0) + "/"]           # Making title 
                 time = levelHandle.attrs["time"]
@@ -92,8 +96,8 @@ for file in listdir(path):
                 boxes = hf_in[mLevel.group(0) + "/boxes"]
                 data_attributes = hf_in[mLevel.group(0) + "/data_attributes"]
                 numBoxes = boxes.shape[0]
-                #print(f'number of boxes: {numBoxes}', end=' ')                              
-
+                #print(f'number of boxes: {numBoxes}', end=' ')   
+                                       
                 for box in boxes:
     
                     boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
