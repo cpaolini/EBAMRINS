@@ -42,8 +42,6 @@ for file in listdir(path):
         components = [i.decode('utf-8') if isinstance(i, np.bytes_) else '' for i in list(root.attrs.values())]
         dataNumPy = np.array(data, np.float64)
         
-        #dxArray = np.empty((levelNum,))
-        #dxArray = np.array((levelNum,))
         level_0 = hf_in["level_0/"]
         prob_domain = level_0.attrs["prob_domain"]
         X, Y = np.mgrid[prob_domain[1]:prob_domain[3]+1, prob_domain[0]:prob_domain[2]+1]
@@ -73,16 +71,15 @@ for file in listdir(path):
                     np.lib.stride_tricks.as_strided(boxData[col * patchRows + row, velocity0_i*(boxDim[0] * boxDim[1]):(velocity0_i+1)*(boxDim[0] * boxDim[1])], \
                     shape=(boxDim[0],boxDim[1]),\
                     strides=(8 * boxDim[1], 8 * 1))   
-
+        
+        i += 1
+        dxArray = np.empty((0,))
         for key in root.keys():
             #print(f'\nkey: {key}', end=' ')
             mLevel = pLevel.match(key)
-            #dataNumPy = np.array(data, np.float64)
             
             if mLevel:
                 levelNum = int(mLevel.group(1))
-
-                dxArray = np.array((levelNum,))
 
                 #print(f'level number: {levelNum}', end=' ')         # printing out each level number 
                 levelHandle = hf_in[mLevel.group(0) + "/"]           # Making title 
@@ -90,8 +87,8 @@ for file in listdir(path):
                 level = hf_in[mLevel.group(0)]                
                 
                 dx = level.attrs["dx"]                               # Printing dx value 
-                dxArray[levelNum] = dx
-                #print(f'dx: {dx}', end=' ')
+                dxArray = np.append(dxArray,dx)
+                #print(f'dx: {dx}')
                 
                 boxes = hf_in[mLevel.group(0) + "/boxes"]
                 data_attributes = hf_in[mLevel.group(0) + "/data_attributes"]
