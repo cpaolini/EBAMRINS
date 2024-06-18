@@ -11,7 +11,7 @@ from os.path import isfile, join
 import glob
 
 def sorted_directory(directory):
-    items = glob.glob(directory + 'plot.*')
+    items = glob.glob('plot.*.hdf5')
     sorted_items = sorted(items)
     return sorted_items
 
