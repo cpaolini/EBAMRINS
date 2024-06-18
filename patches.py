@@ -8,6 +8,12 @@ from numpy.lib.stride_tricks import as_strided
 import pickle
 from os import listdir
 from os.path import isfile, join
+import glob
+
+def sorted_directory(directory):
+    items = glob.glob(directory + 'plot.*')
+    sorted_items = sorted(items)
+    return sorted_items
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -25,8 +31,11 @@ pFile = re.compile('plot.nx128.step(\d+).2d.hdf5')
 pLevel = re.compile('level_(\d+)')
 a = np.empty([0,8])
 
+
 i = 0
-for file in listdir(path):
+
+for file in sorted_directory(path):
+#for file in listdir(path):
     mFile = pFile.match(file)
 
     if mFile:
