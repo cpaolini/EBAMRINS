@@ -23,7 +23,7 @@ if __name__ == '__main__':
             
 pFile = re.compile('plot.nx128.step(\d+).2d.hdf5')
 pLevel = re.compile('level_(\d+)')
-a = np.empty([0,7])
+a = np.empty([0,8])
 
 i = 0
 for file in listdir(path):
@@ -94,7 +94,9 @@ for file in listdir(path):
                 data_attributes = hf_in[mLevel.group(0) + "/data_attributes"]
                 numBoxes = boxes.shape[0]
                 #print(f'number of boxes: {numBoxes}', end=' ')   
-                                       
+
+
+                i = 0                       
                 for box in boxes:
     
                     boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
@@ -111,7 +113,7 @@ for file in listdir(path):
                     v = velocity0[box[1]//factor:(box[3]//factor)+1,box[0]//factor:(box[2]//factor)+1]
                     #print(f"v {v.shape}: {v}")
                     #print(np.max(v))
-                    stdev = np.std(v)
+                    stdev = np.std(v) 
 
                     if math.isnan(stdev):
                         print(f'nan v : {v}, v dim: {v.shape}, {box[1]}:{box[3]+1},{box[0]}:{box[2]+1}')  
@@ -121,9 +123,11 @@ for file in listdir(path):
                         sys.exit(1)
 
                     #print(f'box {boxDim}, origin box dim : {box}', end=' ')
-                    l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev]
+                    l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev, i ]
                     #print(l)
-                    a = np.append(a, [l], axis=0)                   
+                    a = np.append(a, [l], axis=0)       
+
+                    i =+ 0            
 
 with open('patches.pkl', 'wb') as f:
     pickle.dump(a, f)
