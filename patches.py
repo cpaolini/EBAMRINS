@@ -16,10 +16,9 @@ def sorted_directory(directory):
     return sorted_items
 
 if __name__ == '__main__':
-    script_name = os.path.basename(__file__)
 
-    if len(sys.argv) != 2:
-        print (f'usage: {script_name} <path>')
+    if len(sys.argv) != 3:
+        print (f'usage: patches.py <path> <vel>')
         sys.exit()
     else:
         path = sys.argv[1]
@@ -28,6 +27,7 @@ if __name__ == '__main__':
             sys.exit()
         else:
             os.chdir(path)
+        vel = sys.argv[2]
             
 pFile = re.compile('plot.nx128.step(\d+).2d.hdf5')
 pLevel = re.compile('level_(\d+)')
@@ -139,6 +139,7 @@ for file in sorted_directory(path):
                     a = np.append(a, [l], axis=0)       
 
                     i =+ 0            
-
-with open('patches.pkl', 'wb') as f:
+str_vel = str(vel)
+mod_vel = str_vel.replace('.', '_')
+with open('patches_v{mod_vel}.pkl', 'wb') as f:
     pickle.dump(a, f)
