@@ -138,7 +138,8 @@ for file in sorted_directory(path):
                     #print(l)
                     a = np.append(a, [l], axis=0)      
                     i_box =+ 1            
-                    break
+            
+                break
 
 str_vel = str(vel)
 mod_vel = str_vel.replace('.', '_')
