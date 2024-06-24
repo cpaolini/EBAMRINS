@@ -107,7 +107,7 @@ for file in sorted_directory(path):
                 #print(f'number of boxes: {numBoxes}', end=' ')   
 
 
-                i = 0                       
+                i_box = 0                       
                 for box in boxes:
     
                     boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
@@ -134,11 +134,12 @@ for file in sorted_directory(path):
                         sys.exit(1)
 
                     #print(f'box {boxDim}, origin box dim : {box}', end=' ')
-                    l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev, i ]
+                    l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev, i_box ]
                     #print(l)
-                    a = np.append(a, [l], axis=0)       
+                    a = np.append(a, [l], axis=0)      
+                    i_box =+ 1            
+                    break
 
-                    i =+ 0            
 str_vel = str(vel)
 mod_vel = str_vel.replace('.', '_')
 with open('patches_v{mod_vel}.pkl', 'wb') as f:
