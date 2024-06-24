@@ -83,7 +83,6 @@ for file in sorted_directory(path):
                     shape=(boxDim[0],boxDim[1]),\
                     strides=(8 * boxDim[1], 8 * 1))   
         
-        i += 1
         dxArray = np.empty((0,))
         for key in root.keys():
             #print(f'\nkey: {key}', end=' ')
@@ -139,7 +138,7 @@ for file in sorted_directory(path):
                     a = np.append(a, [l], axis=0)      
                     i_box =+ 1            
             
-                break
+        break
 
 str_vel = str(vel)
 mod_vel = str_vel.replace('.', '_')
