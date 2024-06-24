@@ -16,8 +16,10 @@ def sorted_directory(directory):
     return sorted_items
 
 if __name__ == '__main__':
+    script_name = os.path.basename(__file__)
+
     if len(sys.argv) != 2:
-        print (f'usage: patches.py <path>')
+        print (f'usage: {script_name} <path>')
         sys.exit()
     else:
         path = sys.argv[1]
@@ -96,7 +98,7 @@ for file in sorted_directory(path):
                 level = hf_in[mLevel.group(0)]                
                 
                 dx = level.attrs["dx"]                               # Printing dx value 
-                dxArray = np.append(dxArray,dx)
+                dxArray = np.empty(dxArray,dx)
                 #print(f'dx: {dx}')
                 
                 boxes = hf_in[mLevel.group(0) + "/boxes"]
