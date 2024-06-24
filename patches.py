@@ -8,10 +8,17 @@ from numpy.lib.stride_tricks import as_strided
 import pickle
 from os import listdir
 from os.path import isfile, join
+import glob
+
+def sorted_directory(directory):
+    items = glob.glob('plot.*.hdf5')
+    sorted_items = sorted(items)
+    return sorted_items
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print (f'usage: patches.py <path>')
+
+    if len(sys.argv) != 3:
+        print (f'usage: patches.py <path> <vel>')
         sys.exit()
     else:
         path = sys.argv[1]
@@ -20,13 +27,17 @@ if __name__ == '__main__':
             sys.exit()
         else:
             os.chdir(path)
+        vel = sys.argv[2]
             
 pFile = re.compile('plot.nx128.step(\d+).2d.hdf5')
 pLevel = re.compile('level_(\d+)')
-a = np.empty([0,7])
+a = np.empty([0,8])
+
 
 i = 0
-for file in listdir(path):
+
+for file in sorted_directory(path):
+#for file in listdir(path):
     mFile = pFile.match(file)
 
     if mFile:
@@ -42,7 +53,6 @@ for file in listdir(path):
         components = [i.decode('utf-8') if isinstance(i, np.bytes_) else '' for i in list(root.attrs.values())]
         dataNumPy = np.array(data, np.float64)
         
-        dxArray = np.empty((2,))
         level_0 = hf_in["level_0/"]
         prob_domain = level_0.attrs["prob_domain"]
         X, Y = np.mgrid[prob_domain[1]:prob_domain[3]+1, prob_domain[0]:prob_domain[2]+1]
@@ -72,28 +82,32 @@ for file in listdir(path):
                     np.lib.stride_tricks.as_strided(boxData[col * patchRows + row, velocity0_i*(boxDim[0] * boxDim[1]):(velocity0_i+1)*(boxDim[0] * boxDim[1])], \
                     shape=(boxDim[0],boxDim[1]),\
                     strides=(8 * boxDim[1], 8 * 1))   
-
+        
+        i += 1
+        dxArray = np.empty((0,))
         for key in root.keys():
             #print(f'\nkey: {key}', end=' ')
             mLevel = pLevel.match(key)
-            #dataNumPy = np.array(data, np.float64)
             
             if mLevel:
                 levelNum = int(mLevel.group(1))
+
                 #print(f'level number: {levelNum}', end=' ')         # printing out each level number 
                 levelHandle = hf_in[mLevel.group(0) + "/"]           # Making title 
                 time = levelHandle.attrs["time"]
                 level = hf_in[mLevel.group(0)]                
                 
                 dx = level.attrs["dx"]                               # Printing dx value 
-                dxArray[levelNum] = dx
-                #print(f'dx: {dx}', end=' ')
+                dxArray = np.empty(dxArray,dx)
+                #print(f'dx: {dx}')
                 
                 boxes = hf_in[mLevel.group(0) + "/boxes"]
                 data_attributes = hf_in[mLevel.group(0) + "/data_attributes"]
                 numBoxes = boxes.shape[0]
-                #print(f'number of boxes: {numBoxes}', end=' ')                              
+                #print(f'number of boxes: {numBoxes}', end=' ')   
 
+
+                i_box = 0                       
                 for box in boxes:
     
                     boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
@@ -110,7 +124,7 @@ for file in listdir(path):
                     v = velocity0[box[1]//factor:(box[3]//factor)+1,box[0]//factor:(box[2]//factor)+1]
                     #print(f"v {v.shape}: {v}")
                     #print(np.max(v))
-                    stdev = np.std(v)
+                    stdev = np.std(v) 
 
                     if math.isnan(stdev):
                         print(f'nan v : {v}, v dim: {v.shape}, {box[1]}:{box[3]+1},{box[0]}:{box[2]+1}')  
@@ -120,9 +134,14 @@ for file in listdir(path):
                         sys.exit(1)
 
                     #print(f'box {boxDim}, origin box dim : {box}', end=' ')
-                    l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev]
+                    l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev, i_box ]
                     #print(l)
-                    a = np.append(a, [l], axis=0)                   
+                    a = np.append(a, [l], axis=0)      
+                    i_box =+ 1            
+            
+                break
 
-with open('patches.pkl', 'wb') as f:
+str_vel = str(vel)
+mod_vel = str_vel.replace('.', '_')
+with open('patches_v{mod_vel}.pkl', 'wb') as f:
     pickle.dump(a, f)
