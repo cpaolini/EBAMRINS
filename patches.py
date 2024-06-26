@@ -98,7 +98,7 @@ for file in sorted_directory(path):
                 
                 dx = level.attrs["dx"]                               # Printing dx value 
                 dxArray = np.empty(dxArray,dx)
-                #print(f'dx: {dx}')
+                print(f'dx: {dx}')
                 
                 boxes = hf_in[mLevel.group(0) + "/boxes"]
                 data_attributes = hf_in[mLevel.group(0) + "/data_attributes"]
@@ -108,35 +108,36 @@ for file in sorted_directory(path):
 
                 i_box = 0                       
                 for box in boxes:
-    
-                    boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
-                    
-                    # print(f'box {i}: {boxDim}, box : {box}', end=' ')
+                    if time == 248:
+                        boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
+                        
+                        print(f'box {i}: {boxDim}, box : {box}', end=' ')
 
-                    width = box[0] * dx, box[1] * dx, (box[2] - box[0] + 1) * dx
-                    height = (box[3] - box[1] + 1) * dx
-                    
-                    comps == int(data.shape[0]/((boxDim[0] * boxDim[1]) * nBoxes ))
-                    dataNumPy.shape[0]/nBoxes == boxDim[0] * boxDim[1] * comps
-                    boxData = dataNumPy.reshape((nBoxes,int(dataNumPy.shape[0]/nBoxes)))
-                    factor = 2**levelNum
-                    v = velocity0[box[1]//factor:(box[3]//factor)+1,box[0]//factor:(box[2]//factor)+1]
-                    #print(f"v {v.shape}: {v}")
-                    #print(np.max(v))
-                    stdev = np.std(v) 
+                        width = box[0] * dx, box[1] * dx, (box[2] - box[0] + 1) * dx
+                        height = (box[3] - box[1] + 1) * dx
+                        
+                        comps == int(data.shape[0]/((boxDim[0] * boxDim[1]) * nBoxes ))
+                        dataNumPy.shape[0]/nBoxes == boxDim[0] * boxDim[1] * comps
+                        boxData = dataNumPy.reshape((nBoxes,int(dataNumPy.shape[0]/nBoxes)))
+                        factor = 2**levelNum
+                        v = velocity0[box[1]//factor:(box[3]//factor)+1,box[0]//factor:(box[2]//factor)+1]
+                        #print(f"v {v.shape}: {v}")
+                        #print(np.max(v))
+                        stdev = np.std(v) 
 
-                    if math.isnan(stdev):
-                        print(f'nan v : {v}, v dim: {v.shape}, {box[1]}:{box[3]+1},{box[0]}:{box[2]+1}')  
-                        print(f"level: {levelNum}")
-                        print(l)
-                        print(f"v {v.shape}: {v}, velocity0: {velocity0.shape}\n\n\n")
-                        sys.exit(1)
+                        if math.isnan(stdev):
+                            print(f'nan v : {v}, v dim: {v.shape}, {box[1]}:{box[3]+1},{box[0]}:{box[2]+1}')  
+                            print(f"level: {levelNum}")
+                            print(l)
+                            print(f"v {v.shape}: {v}, velocity0: {velocity0.shape}\n\n\n")
+                            sys.exit(1)
 
-                    #print(f'box {boxDim}, origin box dim : {box}', end=' ')
-                    l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev, i_box ]
-                    #print(l)
-                    a = np.append(a, [l], axis=0)      
-                    i_box =+ 1            
+                        #print(f'box {boxDim}, origin box dim : {box}', end=' ')
+                        l = [stepNum, levelNum, box[0] * dx, box[1] * dx,  (box[2] - box[0] + 1) * dx, (box[3] - box[1] + 1) * dx, stdev, i_box ]
+                        #print(l)
+                        a = np.append(a, [l], axis=0)      
+                        
+                        i_box =+ 1            
             
         break
 
