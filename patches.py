@@ -98,7 +98,7 @@ for file in sorted_directory(path):
                 
                 dx = level.attrs["dx"]                               # Printing dx value 
                 dxArray = np.empty(dxArray,dx)
-                print(f'dx: {dx}')  
+                print(f'dx: {dx}')   
                 
                 boxes = hf_in[mLevel.group(0) + "/boxes"]
                 data_attributes = hf_in[mLevel.group(0) + "/data_attributes"]
