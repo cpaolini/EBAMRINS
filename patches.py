@@ -32,10 +32,10 @@ if __name__ == '__main__':
             
 pFile = re.compile('plot.nx128.step(\d+).2d.hdf5')
 pLevel = re.compile('level_(\d+)')
-a = np.empty([0,8])
+a = np.empty([0,7])
 
 
-i = 0
+#i = 0
 
 for file in sorted_directory(path):
 #for file in listdir(path):
@@ -108,7 +108,7 @@ for file in sorted_directory(path):
                 #print(f'number of boxes: {numBoxes}', end=' ')   
 
 
-                i_box = 0                       
+                #i_box = 0                       
                 for box in boxes:
                     # boxDim = (box[2] - box[0] + 1, box[3] - box[1] + 1)                
                     
@@ -134,11 +134,11 @@ for file in sorted_directory(path):
                     #     sys.exit(1)
 
                     #print(f'box {boxDim}, origin box dim : {box}', end=' ')
-                    l = [stepNum, levelNum, box[0], box[1],  (box[2] - box[0] + 1), (box[3] - box[1] + 1), dx, i_box ]
+                    l = [stepNum, levelNum, box[0], box[1],  (box[2] - box[0] + 1), (box[3] - box[1] + 1), dx]
                     #print(l)
                     a = np.append(a, [l], axis=0)      
                     
-                    i_box =+ 1
+                    #i_box =+ 1
 
 #str_vel = str(vel)
 #mod_vel = str_vel.replace('.', '_')
