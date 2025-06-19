@@ -32,7 +32,7 @@ if __name__ == '__main__':
             
 pFile = re.compile('plot.nx128.step(\d+).2d.hdf5')
 pLevel = re.compile('level_(\d+)')
-a = np.empty([0,7])
+a = np.empty([0,8])
 
 
 #i = 0
@@ -94,7 +94,7 @@ for file in sorted_directory(path):
 
                 #print(f'level number: {levelNum}', end=' ')         # printing out each level number 
                 levelHandle = hf_in[mLevel.group(0) + "/"]           # Making title 
-                #time = levelHandle.attrs["time"]
+                time = levelHandle.attrs["time"]
                 level = hf_in[mLevel.group(0)]                
                 
                 dx = level.attrs["dx"]                               # Printing dx value 
@@ -134,8 +134,8 @@ for file in sorted_directory(path):
                     #     sys.exit(1)
 
                     #print(f'box {boxDim}, origin box dim : {box}', end=' ')
-                    l = [stepNum, levelNum, box[0], box[1],  (box[2] - box[0] + 1), (box[3] - box[1] + 1), dx]
-                    #print(l)
+                    l = [stepNum, levelNum, time, box[0], box[1],  (box[2] - box[0] + 1), (box[3] - box[1] + 1), dx]
+                    print(l)
                     a = np.append(a, [l], axis=0)      
                     
                     #i_box =+ 1
